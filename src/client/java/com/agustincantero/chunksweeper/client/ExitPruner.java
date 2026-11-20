@@ -67,7 +67,7 @@ public final class ExitPruner {
 		minecraft.execute(() -> Toasts.showPrune(
 			minecraft,
 			Component.translatable("chunksweeper.prune.done.title"),
-			Component.translatable("chunksweeper.prune.done.message", finished.removedChunks(), Toasts.toMegabytes(finished.bytesFreed()))
+			Component.translatable("chunksweeper.prune.done.message", finished.removedChunks(), Toasts.formatMegabytes(minecraft, finished.bytesFreed()))
 		));
 	}
 

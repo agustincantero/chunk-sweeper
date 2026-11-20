@@ -1,5 +1,6 @@
 package com.agustincantero.chunksweeper.client;
 
+import java.util.Locale;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.network.chat.Component;
@@ -20,5 +21,11 @@ final class Toasts {
 
 	static long toMegabytes(long bytes) {
 		return (bytes + 1048575) / 1048576;
+	}
+
+	static String formatMegabytes(Minecraft minecraft, long bytes) {
+		// Uses the game language (en_us -> en-US) instead of the system locale for the decimal separator.
+		Locale locale = Locale.forLanguageTag(minecraft.getLanguageManager().getSelected().replace('_', '-'));
+		return String.format(locale, "%.1f", bytes / 1048576.0);
 	}
 }
