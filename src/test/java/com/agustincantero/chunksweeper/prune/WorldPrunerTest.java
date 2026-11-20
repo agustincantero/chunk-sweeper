@@ -78,6 +78,25 @@ class WorldPrunerTest {
 	}
 
 	@Test
+	void deletesEmptyEntitiesAndSkipsZeroByteFiles() throws IOException {
+		Path world = this.copyFixture("world");
+		RegionFileData region = RegionFileData.read(world.resolve("region/r.0.0.mca"));
+		BitSet kept = new ChunkFilter(0).keptEntries(region, 0, 0, new LongOpenHashSet());
+		BitSet removedOnly = region.presentEntries();
+		removedOnly.andNot(kept);
+
+		Path entities = world.resolve("entities/r.0.0.mca");
+		Files.write(entities, RegionFileData.read(entities).filter(removedOnly));
+		Path poi = world.resolve("poi/r.0.0.mca");
+		Files.write(poi, new byte[0]);
+
+		new WorldPruner(0, false).pruneInPlace(world, new PruneProgress());
+
+		assertFalse(Files.exists(entities));
+		assertEquals(0, Files.size(poi));
+	}
+
+	@Test
 	void forceLoadedChunksAreKept() throws IOException {
 		Path world = this.copyFixture("world-26-1");
 		Path overworld = world.resolve("dimensions/minecraft/overworld");

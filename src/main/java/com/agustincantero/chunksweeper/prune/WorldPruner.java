@@ -59,8 +59,11 @@ public final class WorldPruner {
 						continue;
 					}
 					RegionFileData data = folder.equals(REGION) ? region : RegionFileData.read(file);
+					if (!data.hasValidHeader()) {
+						continue;
+					}
 					totals.bytesBefore += data.size();
-					if (kept.isEmpty()) {
+					if (!data.presentEntries().intersects(kept)) {
 						Files.delete(file);
 						progress.addBytesFreed(data.size());
 					} else {
@@ -112,13 +115,15 @@ public final class WorldPruner {
 				byte[] pruned = null;
 				if (kept != null) {
 					RegionFileData data = RegionFileData.read(file);
-					totals.bytesBefore += data.size();
-					if (kept.isEmpty()) {
-						progress.step();
-						continue;
+					if (data.hasValidHeader()) {
+						totals.bytesBefore += data.size();
+						if (!data.presentEntries().intersects(kept)) {
+							progress.step();
+							continue;
+						}
+						pruned = data.filter(kept);
+						totals.bytesAfter += pruned.length;
 					}
-					pruned = data.filter(kept);
-					totals.bytesAfter += pruned.length;
 				}
 
 				String entryName = rootName + "/" + worldRoot.relativize(file).toString().replace('\\', '/');
