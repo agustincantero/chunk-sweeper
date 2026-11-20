@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.BitSet;
@@ -97,6 +98,35 @@ class WorldPrunerTest {
 	}
 
 	@Test
+	void deletesRemovedExternalEntityFilesAndKeepsUsedOnes() throws IOException {
+		ExternalEntitySetup setup = this.setupExternalEntityFiles();
+
+		new WorldPruner(0, false).pruneInPlace(setup.world(), new PruneProgress());
+
+		assertTrue(Files.exists(setup.keptExternal()));
+		assertFalse(Files.exists(setup.removedExternal()));
+		BitSet present = RegionFileData.read(setup.world().resolve("entities/r.0.0.mca")).presentEntries();
+		assertTrue(present.get(setup.keptIndex()));
+		assertFalse(present.get(setup.removedIndex()));
+	}
+
+	@Test
+	void omitsRemovedExternalEntityFilesFromBackup() throws IOException {
+		ExternalEntitySetup setup = this.setupExternalEntityFiles();
+		Path zip = this.temp.resolve("backup.zip");
+
+		new WorldPruner(0, false).writePrunedBackup(setup.world(), "world", zip, new PruneProgress());
+
+		assertTrue(Files.exists(setup.keptExternal()));
+		assertTrue(Files.exists(setup.removedExternal()));
+
+		Path extracted = this.temp.resolve("extracted");
+		this.unzip(zip, extracted);
+		assertTrue(Files.exists(extracted.resolve("world/entities/" + setup.keptExternal().getFileName())));
+		assertFalse(Files.exists(extracted.resolve("world/entities/" + setup.removedExternal().getFileName())));
+	}
+
+	@Test
 	void forceLoadedChunksAreKept() throws IOException {
 		Path world = this.copyFixture("world-26-1");
 		Path overworld = world.resolve("dimensions/minecraft/overworld");
@@ -154,6 +184,41 @@ class WorldPrunerTest {
 		PruneResult again = new WorldPruner(0, false).pruneInPlace(extracted.resolve("world"), new PruneProgress());
 		assertEquals(0, again.removedChunks());
 		assertEquals(result.keptChunks(), again.keptChunks());
+	}
+
+	private ExternalEntitySetup setupExternalEntityFiles() throws IOException {
+		Path world = this.copyFixture("world");
+		RegionFileData region = RegionFileData.read(world.resolve("region/r.0.0.mca"));
+		BitSet kept = new ChunkFilter(0).keptEntries(region, 0, 0, new LongOpenHashSet());
+		BitSet removed = region.presentEntries();
+		removed.andNot(kept);
+		int keptIndex = kept.nextSetBit(0);
+		int removedIndex = removed.nextSetBit(0);
+		assertTrue(keptIndex >= 0 && removedIndex >= 0);
+
+		Path entitiesDir = world.resolve("entities");
+		Files.write(entitiesDir.resolve("r.0.0.mca"), externalStubRegion(keptIndex, removedIndex));
+		Path keptExternal = entitiesDir.resolve("c." + (keptIndex & 31) + "." + (keptIndex >> 5) + ".mcc");
+		Path removedExternal = entitiesDir.resolve("c." + (removedIndex & 31) + "." + (removedIndex >> 5) + ".mcc");
+		Files.write(keptExternal, new byte[]{1, 2, 3, 4});
+		Files.write(removedExternal, new byte[]{5, 6, 7, 8});
+		return new ExternalEntitySetup(world, keptIndex, removedIndex, keptExternal, removedExternal);
+	}
+
+	private static byte[] externalStubRegion(int... indices) {
+		byte[] bytes = new byte[(2 + indices.length) * RegionFileData.SECTOR_BYTES];
+		ByteBuffer buffer = ByteBuffer.wrap(bytes);
+		for (int n = 0; n < indices.length; n++) {
+			int sector = 2 + n;
+			buffer.putInt(indices[n] * 4, (sector << 8) | 1);
+			int offset = sector * RegionFileData.SECTOR_BYTES;
+			buffer.putInt(offset, 1);
+			bytes[offset + 4] = (byte) (2 | 0x80);
+		}
+		return bytes;
+	}
+
+	private record ExternalEntitySetup(Path world, int keptIndex, int removedIndex, Path keptExternal, Path removedExternal) {
 	}
 
 	private Path copyFixture(String name) throws IOException {

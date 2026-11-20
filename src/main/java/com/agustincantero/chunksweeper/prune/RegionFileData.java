@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
  */
 public final class RegionFileData {
 	public static final Pattern FILE_NAME = Pattern.compile("^r\\.(-?\\d+)\\.(-?\\d+)\\.mca$");
+	public static final Pattern EXTERNAL_FILE_NAME = Pattern.compile("^c\\.(-?\\d+)\\.(-?\\d+)\\.mcc$");
 	public static final int ENTRY_COUNT = 1024;
 	public static final int SECTOR_BYTES = 4096;
 	private static final int HEADER_BYTES = 2 * SECTOR_BYTES;
@@ -42,11 +43,26 @@ public final class RegionFileData {
 	 * Returns the region coordinates encoded in a file name like {@code r.-1.2.mca}, or null if the name does not match.
 	 */
 	public static int[] parseRegionCoordinates(String fileName) {
-		Matcher matcher = FILE_NAME.matcher(fileName);
+		return parseCoordinates(FILE_NAME, fileName);
+	}
+
+	/**
+	 * Returns the chunk coordinates encoded in an external chunk file name like {@code c.-1.2.mcc}, or null if the name does not match.
+	 */
+	public static int[] parseExternalChunkCoordinates(String fileName) {
+		return parseCoordinates(EXTERNAL_FILE_NAME, fileName);
+	}
+
+	private static int[] parseCoordinates(Pattern pattern, String fileName) {
+		Matcher matcher = pattern.matcher(fileName);
 		if (!matcher.matches()) {
 			return null;
 		}
-		return new int[]{Integer.parseInt(matcher.group(1)), Integer.parseInt(matcher.group(2))};
+		try {
+			return new int[]{Integer.parseInt(matcher.group(1)), Integer.parseInt(matcher.group(2))};
+		} catch (NumberFormatException e) {
+			return null;
+		}
 	}
 
 	public boolean hasValidHeader() {

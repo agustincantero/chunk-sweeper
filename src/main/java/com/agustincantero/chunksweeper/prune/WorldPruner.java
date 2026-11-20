@@ -63,7 +63,8 @@ public final class WorldPruner {
 						continue;
 					}
 					totals.bytesBefore += data.size();
-					if (!data.presentEntries().intersects(kept)) {
+					BitSet present = data.presentEntries();
+					if (!present.intersects(kept)) {
 						Files.delete(file);
 						progress.addBytesFreed(data.size());
 					} else {
@@ -71,6 +72,17 @@ public final class WorldPruner {
 						totals.bytesAfter += pruned.length;
 						replace(file, pruned);
 						progress.addBytesFreed(data.size() - pruned.length);
+					}
+					for (int i = present.nextSetBit(0); i >= 0; i = present.nextSetBit(i + 1)) {
+						if (!kept.get(i) && data.isExternal(i)) {
+							Path external = job.externalFile(folder, i);
+							if (Files.isRegularFile(external)) {
+								long size = Files.size(external);
+								Files.delete(external);
+								totals.bytesBefore += size;
+								progress.addBytesFreed(size);
+							}
+						}
 					}
 				}
 			}
@@ -124,6 +136,10 @@ public final class WorldPruner {
 						pruned = data.filter(kept);
 						totals.bytesAfter += pruned.length;
 					}
+				} else if (shouldOmitExternalChunk(file, name, keptByFile)) {
+					totals.bytesBefore += Files.size(file);
+					progress.step();
+					continue;
 				}
 
 				String entryName = rootName + "/" + worldRoot.relativize(file).toString().replace('\\', '/');
@@ -201,9 +217,28 @@ public final class WorldPruner {
 		}
 	}
 
+	private static boolean shouldOmitExternalChunk(Path file, String name, Map<Path, BitSet> keptByFile) throws IOException {
+		int[] chunkCoords = RegionFileData.parseExternalChunkCoordinates(name);
+		if (chunkCoords == null) {
+			return false;
+		}
+		int regionX = Math.floorDiv(chunkCoords[0], 32);
+		int regionZ = Math.floorDiv(chunkCoords[1], 32);
+		int index = Math.floorMod(chunkCoords[0], 32) + Math.floorMod(chunkCoords[1], 32) * 32;
+		Path siblingRegion = file.resolveSibling("r." + regionX + "." + regionZ + ".mca").toAbsolutePath().normalize();
+		BitSet regionKept = keptByFile.get(siblingRegion);
+		return regionKept != null && !regionKept.get(index) && (!Files.isRegularFile(siblingRegion) || Files.size(siblingRegion) >= 2L * RegionFileData.SECTOR_BYTES);
+	}
+
 	private record RegionJob(Path dimension, String fileName, int regionX, int regionZ) {
 		Path file(String folder) {
 			return this.dimension.resolve(folder).resolve(this.fileName);
+		}
+
+		Path externalFile(String folder, int index) {
+			int chunkX = this.regionX * 32 + (index & 31);
+			int chunkZ = this.regionZ * 32 + (index >> 5);
+			return this.dimension.resolve(folder).resolve("c." + chunkX + "." + chunkZ + ".mcc");
 		}
 	}
 
