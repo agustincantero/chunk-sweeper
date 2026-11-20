@@ -188,11 +188,16 @@ public final class WorldPruner {
 
 	private static void replace(Path target, byte[] bytes) throws IOException {
 		Path temp = target.resolveSibling(target.getFileName() + TEMP_SUFFIX);
-		Files.write(temp, bytes);
 		try {
-			Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-		} catch (AtomicMoveNotSupportedException e) {
-			Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING);
+			Files.write(temp, bytes);
+			try {
+				Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+			} catch (AtomicMoveNotSupportedException e) {
+				Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING);
+			}
+		} catch (IOException | RuntimeException e) {
+			Files.deleteIfExists(temp);
+			throw e;
 		}
 	}
 
