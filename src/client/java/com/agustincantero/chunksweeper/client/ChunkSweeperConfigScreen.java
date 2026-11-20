@@ -13,8 +13,6 @@ import net.minecraft.network.chat.Component;
  * Settings screen built from the same widgets as the vanilla options screens. Opened from Mod Menu.
  */
 public final class ChunkSweeperConfigScreen extends OptionsSubScreen {
-	private static final int MAX_SUMMARY_SECONDS = 10;
-
 	public ChunkSweeperConfigScreen(Screen parent) {
 		super(parent, Minecraft.getInstance().options, Component.translatable("chunksweeper.config.title"));
 	}
@@ -34,8 +32,8 @@ public final class ChunkSweeperConfigScreen extends OptionsSubScreen {
 			"chunksweeper.config.exitSummarySeconds",
 			OptionInstance.cachedConstantTooltip(Component.translatable("chunksweeper.config.exitSummarySeconds.tooltip")),
 			(caption, seconds) -> Options.genericValueLabel(caption, seconds == 0 ? CommonComponents.OPTION_OFF : Component.translatable("chunksweeper.config.seconds", seconds)),
-			new OptionInstance.IntRange(0, MAX_SUMMARY_SECONDS),
-			Math.clamp(config.exitSummarySeconds, 0, MAX_SUMMARY_SECONDS),
+			new OptionInstance.IntRange(0, ChunkSweeperConfig.MAX_EXIT_SUMMARY_SECONDS),
+			Math.clamp(config.exitSummarySeconds, 0, ChunkSweeperConfig.MAX_EXIT_SUMMARY_SECONDS),
 			value -> config.exitSummarySeconds = value
 		));
 

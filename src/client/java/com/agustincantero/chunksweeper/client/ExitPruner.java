@@ -59,11 +59,11 @@ public final class ExitPruner {
 			running = null;
 		}
 
-		if (result == null || result.removedChunks() == 0) {
+		if (result == null || result.removedChunks() == 0 || !minecraft.isRunning()) {
 			return;
 		}
 		PruneResult finished = result;
-		showSummary(finished, config.exitSummarySeconds);
+		showSummary(finished, Math.clamp(config.exitSummarySeconds, 0, ChunkSweeperConfig.MAX_EXIT_SUMMARY_SECONDS));
 		minecraft.execute(() -> Toasts.showPrune(
 			minecraft,
 			Component.translatable("chunksweeper.prune.done.title"),

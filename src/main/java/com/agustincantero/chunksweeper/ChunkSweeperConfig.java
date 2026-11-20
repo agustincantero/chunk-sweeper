@@ -13,6 +13,7 @@ import net.fabricmc.loader.api.FabricLoader;
  * Settings stored in {@code config/chunksweeper.json}. Missing fields keep their default values.
  */
 public final class ChunkSweeperConfig {
+	public static final int MAX_EXIT_SUMMARY_SECONDS = 10;
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 	private static final Path FILE = FabricLoader.getInstance().getConfigDir().resolve("chunksweeper.json");
 	private static ChunkSweeperConfig instance = new ChunkSweeperConfig();
