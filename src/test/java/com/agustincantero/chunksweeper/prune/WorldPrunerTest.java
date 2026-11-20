@@ -99,6 +99,12 @@ class WorldPrunerTest {
 	}
 
 	@Test
+	void readsTicketsFromLegacyChunksFile() throws IOException {
+		LongSet chunks = ForcedChunks.read(this.copyFixture("world"));
+		assertEquals(Set.of(ForcedChunks.pack(1, 1)), new HashSet<>(chunks));
+	}
+
+	@Test
 	void readsLegacyForcedChunks() throws IOException {
 		LongSet chunks = ForcedChunks.read(this.copyFixture("legacy-forceload"));
 		Set<Long> expected = new HashSet<>();

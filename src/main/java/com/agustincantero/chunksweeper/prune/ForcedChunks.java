@@ -31,12 +31,14 @@ public final class ForcedChunks {
 		LongSet chunks = new LongOpenHashSet();
 		Path tickets = dimension.resolve(TICKETS_FILE);
 		Path legacy = dimension.resolve(LEGACY_FILE);
+		Path file = Files.isRegularFile(tickets) ? tickets : legacy;
+		if (!Files.isRegularFile(file)) {
+			return chunks;
+		}
 		try {
-			if (Files.isRegularFile(tickets)) {
-				readTickets(NbtIo.readCompressed(tickets, NbtAccounter.uncompressedQuota()), chunks);
-			} else if (Files.isRegularFile(legacy)) {
-				readLegacy(NbtIo.readCompressed(legacy, NbtAccounter.uncompressedQuota()), chunks);
-			}
+			CompoundTag data = NbtIo.readCompressed(file, NbtAccounter.uncompressedQuota()).getCompoundOrEmpty("data");
+			readTickets(data, chunks);
+			readLegacy(data, chunks);
 		} catch (Exception e) {
 			ChunkSweeper.LOGGER.warn("Could not read force-loaded chunks of {}", dimension, e);
 		}
@@ -44,18 +46,20 @@ public final class ForcedChunks {
 	}
 
 	// Every saved ticket is kept, not only "minecraft:forced", since a ticket that survives a restart means the chunk is meant to stay loaded.
-	private static void readTickets(CompoundTag root, LongSet chunks) {
-		for (Tag entry : root.getCompoundOrEmpty("data").getListOrEmpty("tickets")) {
+	private static void readTickets(CompoundTag data, LongSet chunks) {
+		for (Tag entry : data.getListOrEmpty("tickets")) {
 			if (entry instanceof CompoundTag ticket) {
 				ticket.getIntArray("chunk_pos")
 					.filter(pos -> pos.length == 2)
 					.ifPresent(pos -> chunks.add(pack(pos[0], pos[1])));
+				ticket.getLong("chunk_pos")
+					.ifPresent(pos -> chunks.add(pack((int) (long) pos, (int) (pos >>> 32))));
 			}
 		}
 	}
 
-	private static void readLegacy(CompoundTag root, LongSet chunks) {
-		root.getCompoundOrEmpty("data").getLongArray("Forced").ifPresent(packed -> {
+	private static void readLegacy(CompoundTag data, LongSet chunks) {
+		data.getLongArray("Forced").ifPresent(packed -> {
 			for (long pos : packed) {
 				chunks.add(pack((int) pos, (int) (pos >>> 32)));
 			}
