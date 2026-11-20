@@ -1,0 +1,123 @@
+plugins {
+	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+}
+
+base {
+	archivesName = 'chunk-sweeper'
+}
+
+loom {
+	splitEnvironmentSourceSets()
+
+	mods {
+		"chunksweeper" {
+			sourceSet sourceSets.main
+			sourceSet sourceSets.client
+		}
+	}
+}
+
+fabricApi {
+	configureTests {
+		createSourceSet = true
+		modId = "chunksweeper-gametest"
+		enableGameTests = false
+		enableClientGameTests = true
+		eula = true
+	}
+}
+
+repositories {
+	maven {
+		name = "TerraformersMC"
+		url = "https://maven.terraformersmc.com/releases/"
+		content {
+			includeGroup "com.terraformersmc"
+		}
+	}
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+	// Optional, only needed to compile the Mod Menu integration and to try it in the dev client.
+	compileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
+	localRuntime "com.terraformersmc:modmenu:${project.modmenu_version}"
+
+	testImplementation platform("org.junit:junit-bom:5.13.4")
+	testImplementation "org.junit.jupiter:junit-jupiter"
+	testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+}
+
+processClientResources {
+	// Minecraft treats each Spanish variant as its own language, so they all get a copy of es_es instead of falling back to English.
+	def lang = "assets/chunksweeper/lang"
+	["es_ar", "es_cl", "es_ec", "es_mx", "es_uy", "es_ve"].each { code ->
+		from("src/client/resources/${lang}/es_es.json") {
+			into lang
+			rename { "${code}.json" }
+		}
+	}
+}
+
+processResources {
+	def version = project.version
+	def minecraftDependency = project.minecraft_dependency
+	inputs.property "version", version
+	inputs.property "minecraftDependency", minecraftDependency
+
+	filesMatching("fabric.mod.json") {
+		expand "version": version, "minecraft_dependency": minecraftDependency
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 25
+	it.options.encoding = "UTF-8"
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
+}
+
+// The unit tests use the test worlds of the Thanos library (MIT License, Copyright (c) Aternos GmbH), downloaded at a fixed commit instead of being kept in this repository.
+def thanosCommit = "56772da33595b9b3854462fa2f3396b535e8023c"
+def thanosArchive = layout.buildDirectory.file("thanos/thanos-${thanosCommit}.zip")
+def testWorlds = layout.buildDirectory.dir("thanos/test-worlds")
+
+def downloadThanos = tasks.register("downloadThanos") {
+	description = "Downloads the Thanos repository at a fixed commit for its test worlds."
+	def commit = thanosCommit
+	def archive = thanosArchive
+	inputs.property "commit", commit
+	outputs.file archive
+	doLast {
+		def file = archive.get().asFile
+		file.parentFile.mkdirs()
+		new URI("https://codeload.github.com/aternosorg/thanos/zip/${commit}").toURL().withInputStream { input ->
+			file.withOutputStream { it << input }
+		}
+	}
+}
+
+def extractTestWorlds = tasks.register("extractTestWorlds", Sync) {
+	description = "Extracts the Thanos test worlds used by the unit tests."
+	dependsOn downloadThanos
+	def prefix = "thanos-${thanosCommit}/tests/Fixtures/"
+	from(zipTree(thanosArchive)) {
+		include "${prefix}**"
+		eachFile { it.path = it.path.substring(prefix.length()) }
+		includeEmptyDirs = false
+	}
+	into testWorlds
+}
+
+test {
+	useJUnitPlatform()
+	dependsOn extractTestWorlds
+	inputs.dir testWorlds
+	systemProperty "chunksweeper.testWorlds", testWorlds.get().asFile.absolutePath
+}

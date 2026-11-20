@@ -1,0 +1,15 @@
+{
+	"schemaVersion": 1,
+	"id": "chunksweeper-gametest",
+	"version": "1.0.0",
+	"name": "Chunk Sweeper Game Tests",
+	"environment": "client",
+	"entrypoints": {
+		"fabric-client-gametest": [
+			"com.agustincantero.chunksweeper.gametest.ChunkSweeperClientGameTest"
+		]
+	},
+	"depends": {
+		"chunksweeper": "*"
+	}
+}

@@ -1,0 +1,23 @@
+{
+	"chunksweeper.backup.created": "%s MB, se quitaron %s chunks sin usar",
+	"chunksweeper.prune.screen.running": "Borrando chunks sin usar",
+	"chunksweeper.prune.screen.progress": "%s de %s regiones, %s chunks borrados",
+	"chunksweeper.prune.screen.done": "Se borraron %s chunks sin usar",
+	"chunksweeper.prune.screen.freed": "Se liberaron %s MB",
+	"chunksweeper.prune.done.title": "Chunks sin usar borrados",
+	"chunksweeper.prune.done.message": "Se borraron %s chunks y se liberaron %s MB",
+	"chunksweeper.prune.failed.title": "No se pudieron borrar los chunks sin usar",
+	"chunksweeper.backup.replaced": "%s MB, se quitaron %s chunks sin usar, copia anterior reemplazada",
+	"chunksweeper.config.title": "Chunk Sweeper",
+	"chunksweeper.config.section.exit": "Al salir de un mundo",
+	"chunksweeper.config.pruneOnWorldExit": "Borrar chunks sin usar",
+	"chunksweeper.config.pruneOnWorldExit.tooltip": "Después de \"Guardar y salir\", borra los chunks en los que nadie estuvo. Minecraft los vuelve a generar si alguien vuelve a pasar por ahí.",
+	"chunksweeper.config.exitSummarySeconds": "Mostrar resumen",
+	"chunksweeper.config.exitSummarySeconds.tooltip": "Cuánto tiempo queda en la pantalla \"Guardando mundo\" la cantidad de chunks borrados.",
+	"chunksweeper.config.seconds": "%s s",
+	"chunksweeper.config.section.backup": "Botón Hacer copia de seguridad",
+	"chunksweeper.config.overwriteBackups": "Reemplazar copia anterior",
+	"chunksweeper.config.overwriteBackups.tooltip": "Guarda un solo <carpeta del mundo>.zip en la carpeta de copias, que se reemplaza cada vez, en lugar de agregar un zip nuevo con fecha. Útil si esa carpeta se sincroniza con la nube.",
+	"modmenu.summaryTranslation.chunksweeper": "Borra los chunks sin usar para que los mundos y las copias ocupen menos.",
+	"modmenu.descriptionTranslation.chunksweeper": "Borra los chunks sin usar de los mundos de un jugador al salir de ellos y de las copias de seguridad que se hacen desde la pantalla Editar mundo. Basado en la librería Thanos de Aternos."
+}

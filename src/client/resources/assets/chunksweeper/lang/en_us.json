@@ -1,0 +1,23 @@
+{
+	"chunksweeper.backup.created": "%s MB, %s unused chunks left out",
+	"chunksweeper.prune.screen.running": "Removing unused chunks",
+	"chunksweeper.prune.screen.progress": "%s of %s regions, %s chunks removed",
+	"chunksweeper.prune.screen.done": "Removed %s unused chunks",
+	"chunksweeper.prune.screen.freed": "%s MB freed",
+	"chunksweeper.prune.done.title": "Unused chunks removed",
+	"chunksweeper.prune.done.message": "%s chunks removed, %s MB freed",
+	"chunksweeper.prune.failed.title": "Could not remove unused chunks",
+	"chunksweeper.backup.replaced": "%s MB, %s unused chunks left out, previous backup replaced",
+	"chunksweeper.config.title": "Chunk Sweeper",
+	"chunksweeper.config.section.exit": "When leaving a world",
+	"chunksweeper.config.pruneOnWorldExit": "Remove unused chunks",
+	"chunksweeper.config.pruneOnWorldExit.tooltip": "After \"Save and Quit to Title\", removes the chunks nobody has spent time in. Minecraft generates them again if someone goes back there.",
+	"chunksweeper.config.exitSummarySeconds": "Show summary",
+	"chunksweeper.config.exitSummarySeconds.tooltip": "How long the number of removed chunks stays on the \"Saving world\" screen.",
+	"chunksweeper.config.seconds": "%s s",
+	"chunksweeper.config.section.backup": "Make Backup button",
+	"chunksweeper.config.overwriteBackups": "Replace previous backup",
+	"chunksweeper.config.overwriteBackups.tooltip": "Keeps a single <world folder>.zip in the backups folder that is replaced every time, instead of adding a new dated zip. Handy if that folder is synced to the cloud.",
+	"modmenu.summaryTranslation.chunksweeper": "Removes unused chunks to make worlds and backups smaller.",
+	"modmenu.descriptionTranslation.chunksweeper": "Removes unused chunks from singleplayer worlds when you leave them and from the backups made in the Edit World screen. Based on the Thanos library by Aternos."
+}
