@@ -50,6 +50,7 @@ public final class ChunkSweeperConfig {
 				}
 			} catch (Exception e) {
 				ChunkSweeper.LOGGER.error("Could not read {}, using defaults", FILE, e);
+				return;
 			}
 		}
 		save();
