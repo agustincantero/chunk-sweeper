@@ -15,7 +15,6 @@ import net.fabricmc.loader.api.FabricLoader;
 public final class ChunkSweeperConfig {
 	public static final int MAX_EXIT_SUMMARY_SECONDS = 10;
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-	private static final Path FILE = FabricLoader.getInstance().getConfigDir().resolve("chunksweeper.json");
 	private static ChunkSweeperConfig instance = new ChunkSweeperConfig();
 
 	/**
@@ -43,28 +42,44 @@ public final class ChunkSweeperConfig {
 	}
 
 	public static void load() {
-		if (Files.isRegularFile(FILE)) {
-			try (Reader reader = Files.newBufferedReader(FILE)) {
+		load(defaultFile());
+	}
+
+	static void load(Path file) {
+		instance = new ChunkSweeperConfig();
+		if (Files.isRegularFile(file)) {
+			try (Reader reader = Files.newBufferedReader(file)) {
 				ChunkSweeperConfig loaded = GSON.fromJson(reader, ChunkSweeperConfig.class);
 				if (loaded != null) {
 					instance = loaded;
 				}
 			} catch (Exception e) {
-				ChunkSweeper.LOGGER.error("Could not read {}, using defaults", FILE, e);
+				ChunkSweeper.LOGGER.error("Could not read {}, using defaults", file, e);
 				return;
 			}
 		}
-		save();
+		save(file);
 	}
 
 	public static void save() {
+		save(defaultFile());
+	}
+
+	static void save(Path file) {
 		try {
-			Files.createDirectories(FILE.getParent());
-			try (Writer writer = Files.newBufferedWriter(FILE)) {
+			Path parent = file.getParent();
+			if (parent != null) {
+				Files.createDirectories(parent);
+			}
+			try (Writer writer = Files.newBufferedWriter(file)) {
 				GSON.toJson(instance, writer);
 			}
 		} catch (IOException e) {
-			ChunkSweeper.LOGGER.error("Could not write {}", FILE, e);
+			ChunkSweeper.LOGGER.error("Could not write {}", file, e);
 		}
+	}
+
+	private static Path defaultFile() {
+		return FabricLoader.getInstance().getConfigDir().resolve("chunksweeper.json");
 	}
 }
