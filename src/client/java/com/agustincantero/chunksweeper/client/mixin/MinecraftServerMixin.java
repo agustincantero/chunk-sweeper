@@ -1,7 +1,6 @@
 package com.agustincantero.chunksweeper.client.mixin;
 
 import com.agustincantero.chunksweeper.client.ExitPruner;
-import net.minecraft.CrashReport;
 import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.storage.LevelStorageSource;
@@ -22,9 +21,21 @@ abstract class MinecraftServerMixin {
 	@Unique
 	private volatile boolean chunksweeper$crashed;
 
-	@Inject(method = "onServerCrash", at = @At("HEAD"))
-	private void chunksweeper$markCrashed(CrashReport report, CallbackInfo ci) {
+	// IntegratedServer overrides onServerCrash without calling super, so the call site in runServer is hooked instead.
+	@Inject(
+		method = "runServer",
+		at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;onServerCrash(Lnet/minecraft/CrashReport;)V")
+	)
+	private void chunksweeper$markCrashed(CallbackInfo ci) {
 		this.chunksweeper$crashed = true;
+	}
+
+	// Blocking halts are only used by Minecraft.emergencySave (client crash) and the JVM shutdown hook.
+	@Inject(method = "halt", at = @At("HEAD"))
+	private void chunksweeper$markEmergencyHalt(boolean wait, CallbackInfo ci) {
+		if (wait) {
+			this.chunksweeper$crashed = true;
+		}
 	}
 
 	// At the end of stopServer every level is saved and closed and the session lock is released.
