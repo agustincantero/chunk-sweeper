@@ -14,7 +14,7 @@ The chunk selection is a Java port of the [Thanos](https://github.com/aternosorg
 
 ### Downloads
 
-Releases will be published on the [GitHub releases page](https://github.com/agustincantero/chunk-sweeper/releases). Until then, the mod can be built from sources (see below).
+Releases are available on the [GitHub releases page](https://github.com/agustincantero/chunk-sweeper/releases).
 
 ### Installation
 
